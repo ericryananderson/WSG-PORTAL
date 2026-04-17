@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wilson x Eric Ryan Anderson</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Inconsolata:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #f5f0e8;
+      --ink: #1a1714;
+      --warm-mid: #8a7e6e;
+      --accent: #c8a96e;
+      --rule: rgba(26,23,20,0.12);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      background: var(--ink);
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      overflow: hidden;
+    }
+
+    /* ── PHOTO MOSAIC BACKGROUND ── */
+    #mosaic {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 3px;
+      opacity: 0;
+      animation: mosaicIn 1.4s ease 0.2s forwards;
+    }
+
+    .tile {
+      overflow: hidden;
+      position: relative;
+    }
+    .tile img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: saturate(0.6) brightness(0.55);
+      transform: scale(1.05);
+      transition: filter 6s ease, transform 6s ease;
+    }
+
+    /* slow drift on each tile */
+    .tile:nth-child(1)  img { animation: drift1 18s ease-in-out infinite alternate; }
+    .tile:nth-child(2)  img { animation: drift2 22s ease-in-out infinite alternate; }
+    .tile:nth-child(3)  img { animation: drift3 19s ease-in-out infinite alternate; }
+    .tile:nth-child(4)  img { animation: drift1 24s ease-in-out infinite alternate; }
+    .tile:nth-child(5)  img { animation: drift2 17s ease-in-out infinite alternate; }
+    .tile:nth-child(6)  img { animation: drift3 21s ease-in-out infinite alternate; }
+    .tile:nth-child(7)  img { animation: drift1 20s ease-in-out infinite alternate; }
+    .tile:nth-child(8)  img { animation: drift2 23s ease-in-out infinite alternate; }
+    .tile:nth-child(9)  img { animation: drift3 16s ease-in-out infinite alternate; }
+    .tile:nth-child(10) img { animation: drift1 25s ease-in-out infinite alternate; }
+    .tile:nth-child(11) img { animation: drift2 18s ease-in-out infinite alternate; }
+    .tile:nth-child(12) img { animation: drift3 22s ease-in-out infinite alternate; }
+
+    @keyframes drift1 { from { transform: scale(1.05) translate(0,0); }     to { transform: scale(1.12) translate(-1.5%, -1%); } }
+    @keyframes drift2 { from { transform: scale(1.08) translate(-1%,0); }   to { transform: scale(1.05) translate(1.5%, 1%); } }
+    @keyframes drift3 { from { transform: scale(1.06) translate(1%,-1%); }  to { transform: scale(1.1)  translate(-1%, 1.5%); } }
+
+    /* dark vignette over mosaic */
+    #mosaic::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at center, rgba(26,23,20,0.45) 0%, rgba(26,23,20,0.82) 100%),
+        linear-gradient(to bottom, rgba(26,23,20,0.3) 0%, rgba(26,23,20,0.65) 100%);
+      pointer-events: none;
+    }
+
+    /* grain */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+      background-size: 150px;
+      pointer-events: none;
+      z-index: 10;
+      opacity: 0.6;
+    }
+
+    /* ── PASSWORD GATE ── */
+    #gate {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .gate-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      opacity: 0;
+      animation: fadeUp 0.9s ease 0.8s forwards;
+    }
+
+    .gate-eyebrow {
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1.2rem;
+    }
+
+    .gate-title {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 300;
+      letter-spacing: 0.04em;
+      line-height: 1.1;
+      text-align: center;
+      color: var(--cream);
+      margin-bottom: 0.4rem;
+    }
+    .gate-title .x-mark {
+      color: var(--accent);
+      font-style: italic;
+      padding: 0 0.25em;
+    }
+
+    .gate-sub {
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.35);
+      margin-bottom: 3.2rem;
+    }
+
+    .gate-rule {
+      width: 40px;
+      height: 1px;
+      background: var(--accent);
+      opacity: 0.5;
+      margin-bottom: 3.2rem;
+    }
+
+    .gate-form {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.9rem;
+      width: 100%;
+      max-width: 280px;
+    }
+
+    .gate-input-wrap {
+      width: 100%;
+      position: relative;
+    }
+
+    #pw-input {
+      width: 100%;
+      background: rgba(245,240,232,0.06);
+      border: 1px solid rgba(245,240,232,0.15);
+      color: var(--cream);
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.2em;
+      text-align: center;
+      padding: 0.85rem 1rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      -webkit-text-security: disc;
+    }
+    #pw-input::placeholder {
+      color: rgba(245,240,232,0.2);
+      letter-spacing: 0.18em;
+    }
+    #pw-input:focus {
+      border-color: rgba(245,240,232,0.4);
+      background: rgba(245,240,232,0.09);
+    }
+    #pw-input.shake {
+      animation: shake 0.4s ease;
+      border-color: rgba(200,100,80,0.6) !important;
+    }
+
+    #pw-submit {
+      width: 100%;
+      background: var(--cream);
+      color: var(--ink);
+      border: none;
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.65rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      transition: background 0.18s, color 0.18s;
+    }
+    #pw-submit:hover {
+      background: var(--accent);
+      color: var(--ink);
+    }
+
+    #pw-error {
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.6rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(200,100,80,0.8);
+      height: 1em;
+      transition: opacity 0.2s;
+      opacity: 0;
+    }
+    #pw-error.visible { opacity: 1; }
+
+    .gate-footer-note {
+      margin-top: 3rem;
+      font-family: 'Inconsolata', monospace;
+      font-size: 0.58rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: rgba(245,240,232,0.18);
+      text-align: center;
+      line-height: 1.8;
+    }
+    .gate-footer-note a {
+      color: rgba(200,169,110,0.5);
+      text-decoration: none;
+    }
+    .gate-footer-note a:hover { color: var(--accent); }
+
+    /* ── PORTAL (hidden until unlocked) ── */
+    #portal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      overflow-y: auto;
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+
+    #portal.visible { display: block; }
+
+    /* grain on portal */
+    #portal::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      background-size: 150px;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    .portal-wrap {
+      max-width: 860px;
+      margin: 0 auto;
+      padding: 0 2.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Portal header */
+    .p-header {
+      padding: 4rem 0 3rem;
+      border-bottom: 1px solid var(--rule);
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 2rem;
+      flex-wrap: wrap;
+      opacity: 0;
+      animation: fadeUp 0.8s ease 0.1s forwards;
+    }
+    .p-client-name { font-size: 2.6rem; font-weight: 300; letter-spacing: 0.04em; line-height: 1.1; }
+    .p-x-mark { color: var(--accent); font-style: italic; padding: 0 0.3em; }
+    .p-header-meta { text-align: right; font-family: 'Inconsolata', monospace; font-size: 0.68rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warm-mid); line-height: 1.8; }
+
+    .p-intro { padding: 3rem 0 2.5rem; border-bottom: 1px solid var(--rule); opacity: 0; animation: fadeUp 0.8s ease 0.2s forwards; }
+    .p-intro p { font-size: 1.15rem; font-weight: 300; line-height: 1.75; color: var(--warm-mid); max-width: 600px; font-style: italic; }
+    .p-intro a { color: var(--accent); text-decoration: none; }
+
+    .p-section-label { font-family: 'Inconsolata', monospace; font-size: 0.65rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--accent); margin-bottom: 2rem; margin-top: 3rem; display: flex; align-items: center; gap: 1rem; }
+    .p-section-label::after { content: ''; flex: 1; height: 1px; background: var(--rule); }
+
+    .shoot-card { display: grid; grid-template-columns: 340px 1fr; border-bottom: 1px solid var(--rule); padding: 2.2rem 0; opacity: 0; animation: fadeUp 0.6s ease forwards; }
+    .shoot-cover { width: 100%; aspect-ratio: 3/2; overflow: hidden; background: rgba(26,23,20,0.06); flex-shrink: 0; }
+    .shoot-cover img { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(0.88); transition: transform 0.5s ease, filter 0.4s ease; }
+    .shoot-card:hover .shoot-cover img { transform: scale(1.03); filter: saturate(1); }
+    .shoot-body { padding-left: 2rem; display: flex; flex-direction: column; justify-content: space-between; }
+    .shoot-title { font-size: 1.45rem; font-weight: 300; letter-spacing: 0.01em; line-height: 1.2; margin-bottom: 0.35rem; }
+    .shoot-meta { font-family: 'Inconsolata', monospace; font-size: 0.65rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--warm-mid); display: flex; gap: 1.2rem; flex-wrap: wrap; margin-bottom: 1.6rem; }
+
+    .delivery-links { display: flex; flex-direction: column; gap: 0.35rem; }
+    .delivery-btn { display: flex; align-items: center; justify-content: space-between; text-decoration: none; padding: 0.52rem 0.8rem; border: 1px solid var(--rule); transition: background 0.18s, border-color 0.18s, color 0.18s; color: var(--ink); }
+    .delivery-btn:not(.unavailable):hover { background: var(--ink); color: var(--cream); border-color: var(--ink); }
+    .delivery-btn.unavailable { opacity: 0.28; pointer-events: none; }
+    .btn-label { font-family: 'Inconsolata', monospace; font-size: 0.64rem; letter-spacing: 0.13em; text-transform: uppercase; }
+    .btn-arrow { width: 10px; height: 10px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex-shrink: 0; }
+
+    .p-footer { margin-top: 5rem; padding: 2.5rem 0 3rem; border-top: 1px solid var(--rule); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; opacity: 0; animation: fadeUp 0.8s ease 0.3s forwards; }
+    .p-footer-left { font-family: 'Inconsolata', monospace; font-size: 0.65rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--warm-mid); line-height: 1.9; }
+    .p-footer a { color: var(--accent); text-decoration: none; }
+    .p-footer a:hover { text-decoration: underline; }
+    .p-footer-sig { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; font-style: italic; font-weight: 300; color: var(--warm-mid); }
+
+    /* ── Animations ── */
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes mosaicIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20% { transform: translateX(-8px); }
+      40% { transform: translateX(8px); }
+      60% { transform: translateX(-5px); }
+      80% { transform: translateX(5px); }
+    }
+
+    @media (max-width: 660px) {
+      .shoot-card { grid-template-columns: 1fr; }
+      .shoot-body { padding-left: 0; padding-top: 1.2rem; }
+      .p-header-meta { text-align: left; }
+      #mosaic { grid-template-columns: repeat(2, 1fr); grid-template-rows: repeat(4, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── MOSAIC BACKGROUND ── -->
+  <div id="mosaic">
+    <!-- 12 tiles cycling through the 9 thumbnails -->
+    <div class="tile"><img src="ERA_Wilson_BeatTheHeat_Thumbnail.jpg"    alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_MainlineGrass_Thumbnail.jpg"  alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_MartaDress_Thumbnail.jpg"     alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_WSPGrass_Thumbnail.jpg"       alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_WSPClay_Thumbnail.jpg"        alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_MainlineClay_Thumbnail.jpg"   alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_IndianWells_Thumbnail.jpg"    alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_HeatedAction_Thumbnail.jpg"   alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_DesertTennis_Thumbnail.jpg"   alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_BeatTheHeat_Thumbnail.jpg"    alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_WSPClay_Thumbnail.jpg"        alt="" /></div>
+    <div class="tile"><img src="ERA_Wilson_DesertTennis_Thumbnail.jpg"   alt="" /></div>
+  </div>
+
+  <!-- ── PASSWORD GATE ── -->
+  <div id="gate">
+    <div class="gate-inner">
+      <div class="gate-title">Wilson<span class="x-mark">×</span>Eric Ryan Anderson</div>
+      <div class="gate-rule"></div>
+      <div class="gate-form">
+        <div class="gate-input-wrap">
+          <input id="pw-input" type="password" placeholder="Enter password" autocomplete="off" />
+        </div>
+        <button id="pw-submit">Enter</button>
+        <div id="pw-error">Incorrect password</div>
+      </div>
+      <div class="gate-footer-note">
+        Questions? <a href="mailto:studio@ericryananderson.com">studio@ericryananderson.com</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       PORTAL CONTENT (hidden until unlocked)
+  ══════════════════════════════════════════ -->
+  <div id="portal">
+    <div class="portal-wrap">
+
+      <div class="p-header">
+        <div>
+          <div class="p-client-name">Wilson<span class="p-x-mark">×</span>Eric Ryan Anderson</div>
+        </div>
+        <div class="p-header-meta">Client Portal<br>Updated April 2026<br>Confidential</div>
+      </div>
+
+      <div class="p-intro">
+        <p>All 2026 productions, newest to oldest. Links go live as each delivery is ready. This is a work in progress... Please email <a href="mailto:studio@ericryananderson.com">studio@ericryananderson.com</a> with any questions!</p>
+      </div>
+
+      <div class="p-section-label">2026 Productions</div>
+
+      <!-- 1. Beat the Heat -->
+      <div class="shoot-card" style="animation-delay:0.10s">
+        <div class="shoot-cover"><img src="ERA_Wilson_BeatTheHeat_Thumbnail.jpg" alt="Beat the Heat" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Beat the Heat</div>
+            <div class="shoot-meta"><span>Palm Desert, CA</span><span>April 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2. Mainline Grass -->
+      <div class="shoot-card" style="animation-delay:0.16s">
+        <div class="shoot-cover"><img src="ERA_Wilson_MainlineGrass_Thumbnail.jpg" alt="Mainline Grass" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Mainline Grass</div>
+            <div class="shoot-meta"><span>Palm Desert, CA</span><span>April 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/g0vfnibb27cixg41j87qs/ANBmW9t1bgXMQ5GXTGmIJ-s?rlkey=8uvb0runbs8e3bsk4gb8q3bny&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Marta Dress -->
+      <div class="shoot-card" style="animation-delay:0.22s">
+        <div class="shoot-cover"><img src="ERA_Wilson_MartaDress_Thumbnail.jpg" alt="Marta Dress" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Marta Dress</div>
+            <div class="shoot-meta"><span>Nice, France</span><span>March 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/pnqflgutsirspbxhm5cny/ALI_40Mp7qTNQGXnOBiXMWo?rlkey=rlittdppgkowgtapa2k7fw5d7&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. WSP Grass -->
+      <div class="shoot-card" style="animation-delay:0.28s">
+        <div class="shoot-cover"><img src="ERA_Wilson_WSPGrass_Thumbnail.jpg" alt="WSP Grass" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">WSP Grass</div>
+            <div class="shoot-meta"><span>Nice, France</span><span>March 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/yebg4jei4kej9prc0mabe/AI6C7lnKR2TCE7RC9iYNSu0?rlkey=p294u78hoi04ipjypoj4rhwe6&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/na3c5i2mgk8iclqujaz74/AImo3BGjM4rBGgNZ5DnMeHw?rlkey=ldhoq1u5sd96sn5wgnc7g8dx0&dl=0" target="_blank"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 5. WSP Clay -->
+      <div class="shoot-card" style="animation-delay:0.34s">
+        <div class="shoot-cover"><img src="ERA_Wilson_WSPClay_Thumbnail.jpg" alt="WSP Clay" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">WSP Clay</div>
+            <div class="shoot-meta"><span>Nice, France</span><span>March 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/ivvfjvf39jr2skza0f5z3/ACHRP1NxE10OqdDPmqgz0NM?rlkey=5a7532703qojeht9bwjwwjzlc&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/7m36uyhzvzifdkdu7iowt/AEj8dPNqaxWbK56QISjjX7o?rlkey=15bweems2ivqkofrkqjtcczcf&dl=0" target="_blank"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/ukkk17lr4wy2s8gb4jc5g/AHUIkP2byaNfGMtsdd9-C9Y?rlkey=y9cdgp3v0s3zv42b0vvemck1w&dl=0" target="_blank"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 6. Mainline Clay -->
+      <div class="shoot-card" style="animation-delay:0.40s">
+        <div class="shoot-cover"><img src="ERA_Wilson_MainlineClay_Thumbnail.jpg" alt="Mainline Clay" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Mainline Clay</div>
+            <div class="shoot-meta"><span>Nice, France</span><span>March 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/6yhpeg4gk3u4ucftx8ob3/APHHOf63eQmJ1WUzBLDxakc?rlkey=jsourxix3hfb8o4fyecyc2qvh&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/ea2pu3nrd1umrcoafapog/ADCc5rM7NvykrhBM1MdMLEg?rlkey=8bxg197bw55y1u750dburqzgr&dl=0" target="_blank"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Indian Wells -->
+      <div class="shoot-card" style="animation-delay:0.46s">
+        <div class="shoot-cover"><img src="ERA_Wilson_IndianWells_Thumbnail.jpg" alt="Indian Wells" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Indian Wells</div>
+            <div class="shoot-meta"><span>Palm Desert, CA</span><span>February 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/s58560tevvyysa68jeexd/AMQhpTwqX5kg0YCFvopGLBo?rlkey=l1a9ubaeepprs1ksp3dnfuzb4&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/dhcn941f2dtmpk0477y62/ANba3adX5zeU-DzekfdPJOI?rlkey=okmea9hk6oncd5fwwob0aam5y&dl=0" target="_blank"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Heated Action -->
+      <div class="shoot-card" style="animation-delay:0.52s">
+        <div class="shoot-cover"><img src="ERA_Wilson_HeatedAction_Thumbnail.jpg" alt="Heated Action" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Heated Action</div>
+            <div class="shoot-meta"><span>Coachella, CA</span><span>February 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/9x5udymx55fsnn6hqx68s/AESP0Ln8ua-yEBsNWN_VT_w?rlkey=2pimczkr7vf3xbv9jzhn32lb5&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/lwmmj1da0x0t897fxjbva/AFQ8U1sZS4ZR3cGXilBwNe0?rlkey=8n2tc91ad4i36qlj7rzquj6a7&dl=0" target="_blank"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/yq8bia2ezd4jm4zyu3mkg/AM58R5e3MNOElrMFBoxRzSQ?rlkey=oye43o73pg1ixmyj5ygawf2mh&dl=0" target="_blank"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <!-- 9. Desert Tennis -->
+      <div class="shoot-card" style="animation-delay:0.58s">
+        <div class="shoot-cover"><img src="ERA_Wilson_DesertTennis_Thumbnail.jpg" alt="Desert Tennis" loading="lazy" /></div>
+        <div class="shoot-body">
+          <div>
+            <div class="shoot-title">Desert Tennis</div>
+            <div class="shoot-meta"><span>Palm Desert, CA</span><span>January 2026</span></div>
+          </div>
+          <div class="delivery-links">
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/0b03pdpn0whrlq0tqo4kx/AMcTRDLPGsMwaaWM8DT2X0w?rlkey=qyyvonll72eei2d7sqqwqr97e&dl=0" target="_blank"><span class="btn-label">Web Res Proofs</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/tvolih3r9op88yhrfycnp/APjxpETUz-053Ox3vUdodzc?rlkey=yxts6mjw9xvwt1odno1i4y1zf&dl=0" target="_blank"><span class="btn-label">Selects (JPG)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/kj2ukr915onhd5igjupym/AOuxVupY1dcuuvUcvqJqhpw?rlkey=s1nq3stj0yzzak74q64aijkzw&dl=0" target="_blank"><span class="btn-label">Selects (RAW)</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Retouched Finals</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn" href="https://www.dropbox.com/scl/fo/varyqn71zhu7vamg146i8/ALeQzGri_qfjZI4B6SemtyQ?rlkey=nb54wbfjm7pwepvenu04um1rz&dl=0" target="_blank"><span class="btn-label">Film Scans</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+            <a class="delivery-btn unavailable" href="#"><span class="btn-label">Video</span><svg class="btn-arrow" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></a>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-footer">
+        <div class="p-footer-left">
+          Eric Ryan Anderson &nbsp;·&nbsp; <a href="mailto:studio@ericryananderson.com">studio@ericryananderson.com</a><br>
+          Sunnyside Projects &nbsp;·&nbsp; Nashville, TN
+        </div>
+        <div class="p-footer-sig">Thank you for the work.</div>
+      </div>
+
+    </div><!-- /portal-wrap -->
+  </div><!-- /portal -->
+
+  <script>
+    const PASSWORD = 'wilson2026';
+
+    const input  = document.getElementById('pw-input');
+    const btn    = document.getElementById('pw-submit');
+    const error  = document.getElementById('pw-error');
+    const gate   = document.getElementById('gate');
+    const portal = document.getElementById('portal');
+
+    function attempt() {
+      if (input.value === PASSWORD) {
+        gate.style.transition = 'opacity 0.6s ease';
+        gate.style.opacity = '0';
+        setTimeout(() => {
+          gate.style.display = 'none';
+          document.body.style.overflow = 'auto';
+          document.body.style.background = 'var(--cream)';
+          portal.classList.add('visible');
+        }, 600);
+      } else {
+        input.classList.remove('shake');
+        void input.offsetWidth; // reflow to restart animation
+        input.classList.add('shake');
+        error.classList.add('visible');
+        input.value = '';
+        setTimeout(() => error.classList.remove('visible'), 2000);
+      }
+    }
+
+    btn.addEventListener('click', attempt);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') attempt(); });
+  </script>
+
+</body>
+</html>
